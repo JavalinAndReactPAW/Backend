@@ -18,6 +18,8 @@ public class DomainTable {
     @GeneratedValue
     private Integer id;
 
+    private String name;
+    
     @OneToMany
     private List<DomainList> lists;
 

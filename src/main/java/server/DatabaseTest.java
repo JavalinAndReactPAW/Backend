@@ -24,15 +24,16 @@ public class DatabaseTest {
         listCollection.add(DomainList.builder().card("QWERTY").build());
         listCollection.add(DomainList.builder().card("JAVALIN").build());
         listCollection.add(DomainList.builder().card("JESTSUPER").build());
-        DomainTable table = DomainTable.builder().lists(listCollection).build();
+        DomainTable table = DomainTable.builder().name("TESTOWA TABELA").lists(listCollection).build();
         listCollection.forEach(x -> manager.persist(x));
         manager.persist(table);
 
+        List<DomainTable> domainTables = manager.createQuery("SELECT t FROM Table t",DomainTable.class).getResultList();
+
         manager.getTransaction().commit();
         manager.close();
-        factory.close();
 
         Javalin app = Javalin.create().start(7000);
-        app.get("/", ctx -> ctx.result("Hello World"));
+        app.get("/", ctx -> ctx.json(domainTables));
     }
 }
