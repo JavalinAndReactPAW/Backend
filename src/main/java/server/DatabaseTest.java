@@ -26,7 +26,6 @@ public class DatabaseTest {
         listCollection.add(DomainList.builder().card("JESTSUPER").build());
         DomainBoard table = DomainBoard.builder().name("TESTOWA TABLICA").lists(listCollection).build();
 
-        listCollection.forEach(x -> manager.persist(x));
         manager.persist(table);
 
         listCollection = new ArrayList<>();
@@ -36,7 +35,6 @@ public class DatabaseTest {
         listCollection.add(DomainList.builder().card("OK").build());
         table = DomainBoard.builder().name("TABLICA NR 2").lists(listCollection).build();
 
-        listCollection.forEach(x -> manager.persist(x));
         manager.persist(table);
 
         manager.getTransaction().commit();
