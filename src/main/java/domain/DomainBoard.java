@@ -10,17 +10,17 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "Table")
+@Entity(name = "Board")
 @Table
-public class DomainTable {
+public class DomainBoard {
 
     @Id
     @GeneratedValue
     private Integer id;
 
     private String name;
-    
-    @OneToMany
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<DomainList> lists;
 
 }
