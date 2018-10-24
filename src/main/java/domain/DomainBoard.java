@@ -15,7 +15,7 @@ import java.util.List;
 public class DomainBoard {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     private String name;
