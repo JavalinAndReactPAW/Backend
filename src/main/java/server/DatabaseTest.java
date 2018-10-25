@@ -1,5 +1,6 @@
 package server;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import domain.DomainBoard;
 import domain.DomainCard;
 import domain.DomainList;
@@ -25,19 +26,19 @@ public class DatabaseTest {
         List<DomainCard> cardCollection = new ArrayList<>();
         cardCollection.add(DomainCard.builder().name("TEST1").value("kartaJedna").build());
         cardCollection.add(DomainCard.builder().name("TEST2").value("kartaDruga").build());
-        listCollection.add(DomainList.builder().cards(cardCollection).build());
+        listCollection.add(DomainList.builder().name("Lista1").cards(cardCollection).build());
         cardCollection = new ArrayList<>();
         cardCollection.add(DomainCard.builder().name("TEST1").value("kartaJedna").build());
         cardCollection.add(DomainCard.builder().name("TEST2").value("kartaDruga").build());
-        listCollection.add(DomainList.builder().cards(cardCollection).build());
+        listCollection.add(DomainList.builder().name("Lista2").cards(cardCollection).build());
         cardCollection = new ArrayList<>();
         cardCollection.add(DomainCard.builder().name("TEST1").value("kartaJedna").build());
         cardCollection.add(DomainCard.builder().name("TEST2").value("kartaDruga").build());
-        listCollection.add(DomainList.builder().cards(cardCollection).build());
+        listCollection.add(DomainList.builder().name("Lista3").cards(cardCollection).build());
         cardCollection = new ArrayList<>();
         cardCollection.add(DomainCard.builder().name("TEST1").value("kartaJedna").build());
         cardCollection.add(DomainCard.builder().name("TEST2").value("kartaDruga").build());
-        listCollection.add(DomainList.builder().cards(cardCollection).build());
+        listCollection.add(DomainList.builder().name("Lista4").cards(cardCollection).build());
         DomainBoard table = DomainBoard.builder().name("TESTOWA TABLICA").lists(listCollection).build();
 
         manager.persist(table);
@@ -46,20 +47,20 @@ public class DatabaseTest {
         cardCollection = new ArrayList<>();
         cardCollection.add(DomainCard.builder().name("TEST1").value("kartaJedna").build());
         cardCollection.add(DomainCard.builder().name("TEST2").value("kartaDruga").build());
-        listCollection.add(DomainList.builder().cards(cardCollection).build());
+        listCollection.add(DomainList.builder().name("Lista5").cards(cardCollection).build());
         cardCollection = new ArrayList<>();
         cardCollection.add(DomainCard.builder().name("TEST1").value("kartaJedna").build());
         cardCollection.add(DomainCard.builder().name("TEST2").value("kartaDruga").build());
-        listCollection.add(DomainList.builder().cards(cardCollection).build());
+        listCollection.add(DomainList.builder().name("Lista6").cards(cardCollection).build());
         cardCollection = new ArrayList<>();
         cardCollection.add(DomainCard.builder().name("TEST1").value("kartaJedna").build());
         cardCollection.add(DomainCard.builder().name("TEST2").value("kartaDruga").build());
-        listCollection.add(DomainList.builder().cards(cardCollection).build());
+        listCollection.add(DomainList.builder().name("Lista7").cards(cardCollection).build());
         cardCollection = new ArrayList<>();
         cardCollection.add(DomainCard.builder().name("TEST1").value("kartaJedna").build());
         cardCollection.add(DomainCard.builder().name("TEST2").value("kartaDruga").build());
-        listCollection.add(DomainList.builder().cards(cardCollection).build());
-        DomainBoard table2 = DomainBoard.builder().name("TESTOWA TABLICA").lists(listCollection).build();
+        listCollection.add(DomainList.builder().name("Lista8").cards(cardCollection).build());
+        DomainBoard table2 = DomainBoard.builder().name("TESTOWA TABLICA 2").lists(listCollection).build();
 
         manager.persist(table2);
 
@@ -73,6 +74,7 @@ public class DatabaseTest {
         app.get("/", ctx -> {
             val tmp = factory.createEntityManager();
             val result = tmp.createQuery("SELECT t FROM Board t", DomainBoard.class).getResultList();
+            result.forEach(domainBoard -> domainBoard.setLists(null));
             tmp.close();
             ctx.json(result);
         });
@@ -82,6 +84,19 @@ public class DatabaseTest {
             val tmp = factory.createEntityManager();
             try {
                 val result = tmp.createQuery("SELECT t FROM Board t where t.id=:id", DomainBoard.class).setParameter("id", id).getSingleResult();
+                ctx.json(result);
+            } catch (Exception ex) {
+                ctx.result(ex.toString());
+            } finally {
+                tmp.close();
+            }
+        });
+
+        app.get("/card/:id", ctx -> {
+            int id = Integer.valueOf(ctx.pathParam("id"));
+            val tmp = factory.createEntityManager();
+            try {
+                val result = tmp.createQuery("SELECT t FROM Card t where t.id=:id", DomainCard.class).setParameter("id", id).getSingleResult();
                 ctx.json(result);
             } catch (Exception ex) {
                 ctx.result(ex.toString());
