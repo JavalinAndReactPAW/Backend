@@ -1,5 +1,6 @@
 package domain;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import javax.persistence.*;
@@ -21,6 +22,7 @@ public class DomainBoard {
     private String name;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<DomainList> lists;
 
 }

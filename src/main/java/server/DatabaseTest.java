@@ -1,5 +1,6 @@
 package server;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import domain.DomainBoard;
 import domain.DomainCard;
 import domain.DomainList;
@@ -73,6 +74,7 @@ public class DatabaseTest {
         app.get("/", ctx -> {
             val tmp = factory.createEntityManager();
             val result = tmp.createQuery("SELECT t FROM Board t", DomainBoard.class).getResultList();
+            result.forEach(domainBoard -> domainBoard.setLists(null));
             tmp.close();
             ctx.json(result);
         });
