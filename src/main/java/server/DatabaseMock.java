@@ -1,26 +1,22 @@
 package server;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import domain.DomainBoard;
 import domain.DomainCard;
 import domain.DomainList;
-import io.javalin.Javalin;
-import lombok.val;
+import domain.DomainUser;
+import org.mindrot.jbcrypt.BCrypt;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DatabaseTest {
-
+public class DatabaseMock {
     //Mock do sprawdzenia czy baza dziala
-    public static void doMagic() {
-        EntityManagerFactory factory = Persistence.createEntityManagerFactory("NewPersistenceUnit");
+    public static void createMock(EntityManagerFactory factory) {
+
         EntityManager manager = factory.createEntityManager();
         manager.getTransaction().begin();
-
 
         List<DomainList> listCollection = new ArrayList<>();
         List<DomainCard> cardCollection = new ArrayList<>();
@@ -64,61 +60,12 @@ public class DatabaseTest {
 
         manager.persist(table2);
 
+        DomainUser domainUser = DomainUser.builder().login("test").password(BCrypt.hashpw("123", BCrypt.gensalt())).build();
+        manager.persist(domainUser);
+        DomainUser domainUser1 = DomainUser.builder().login("user").password(BCrypt.hashpw("123", BCrypt.gensalt())).build();
+        manager.persist(domainUser1);
+
         manager.getTransaction().commit();
         manager.close();
-
-        Javalin app = Javalin.create();
-        app.enableCorsForAllOrigins();
-        app.start(7000);
-
-        app.get("/", ctx -> {
-            val tmp = factory.createEntityManager();
-            val result = tmp.createQuery("SELECT t FROM Board t", DomainBoard.class).getResultList();
-            result.forEach(domainBoard -> domainBoard.setLists(null));
-            tmp.close();
-            ctx.json(result);
-        });
-
-        app.get("/board/:id", ctx -> {
-            int id = Integer.valueOf(ctx.pathParam("id"));
-            val tmp = factory.createEntityManager();
-            try {
-                val result = tmp.createQuery("SELECT t FROM Board t where t.id=:id", DomainBoard.class).setParameter("id", id).getSingleResult();
-                ctx.json(result);
-            } catch (Exception ex) {
-                ctx.result(ex.toString());
-            } finally {
-                tmp.close();
-            }
-        });
-
-        app.get("/card/:id", ctx -> {
-            int id = Integer.valueOf(ctx.pathParam("id"));
-            val tmp = factory.createEntityManager();
-            try {
-                val result = tmp.createQuery("SELECT t FROM Card t where t.id=:id", DomainCard.class).setParameter("id", id).getSingleResult();
-                ctx.json(result);
-            } catch (Exception ex) {
-                ctx.result(ex.toString());
-            } finally {
-                tmp.close();
-            }
-        });
-
-        app.get("/remove/:id", ctx -> {
-            val tmp = factory.createEntityManager();
-            try {
-                tmp.getTransaction().begin();
-                val item = tmp.find(DomainBoard.class, Integer.valueOf(ctx.pathParam("id")));
-                tmp.remove(item);
-                tmp.getTransaction().commit();
-                tmp.close();
-                ctx.result("OK");
-            } catch (Exception ex) {
-                ctx.result(ex.toString());
-            } finally {
-                tmp.close();
-            }
-        });
     }
 }
