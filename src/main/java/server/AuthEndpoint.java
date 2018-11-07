@@ -19,6 +19,7 @@ public class AuthEndpoint {
 
     public static void addAuthEndpoint(Javalin app, EntityManagerFactory factory) {
         app.post("/login", ctx -> {
+            ctx.header("Access-Control-Allow-Credentials", "true");
             var loginRequest = ctx.bodyAsClass(LoginRequest.class);
             var entityManager = factory.createEntityManager();
             DomainUser selectedUser = null;
