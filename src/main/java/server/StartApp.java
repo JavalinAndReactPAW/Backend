@@ -17,6 +17,7 @@ public class StartApp {
 
         SampleEndpoints.createEndpoints(app,factory);
         AuthEndpoint.addAuthEndpoint(app,factory);
+        BoardEndpoint.createBoardEndpoints(app,factory);
 
         app.start(7000);
 

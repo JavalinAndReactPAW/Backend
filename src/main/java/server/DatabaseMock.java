@@ -9,6 +9,7 @@ import org.mindrot.jbcrypt.BCrypt;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DatabaseMock {
@@ -60,9 +61,19 @@ public class DatabaseMock {
 
         manager.persist(table2);
 
-        DomainUser domainUser = DomainUser.builder().login("test").password(BCrypt.hashpw("123", BCrypt.gensalt())).build();
+
+        DomainUser domainUser = DomainUser.builder().login("test")
+                .password(BCrypt.hashpw("123", BCrypt.gensalt()))
+                .boardIds(Collections.singletonList(1))
+                .build();
         manager.persist(domainUser);
-        DomainUser domainUser1 = DomainUser.builder().login("user").password(BCrypt.hashpw("123", BCrypt.gensalt())).build();
+        ArrayList<Integer> boardIds = new ArrayList<>();
+        boardIds.add(1);
+        boardIds.add(2);
+        DomainUser domainUser1 = DomainUser.builder().login("user")
+                .password(BCrypt.hashpw("123", BCrypt.gensalt()))
+                .boardIds(boardIds)
+                .build();
         manager.persist(domainUser1);
 
         manager.getTransaction().commit();

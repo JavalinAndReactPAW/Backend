@@ -1,6 +1,7 @@
 package server;
 
 import domain.DomainUser;
+import io.javalin.Context;
 import io.javalin.Javalin;
 import lombok.var;
 import org.mindrot.jbcrypt.BCrypt;
@@ -19,12 +20,12 @@ public class AuthEndpoint {
 
     public static void addAuthEndpoint(Javalin app, EntityManagerFactory factory) {
         app.post("/login", ctx -> {
-            ctx.header("Access-Control-Allow-Credentials", "true");
+            enableAuthCORSFix(ctx);
             var loginRequest = ctx.bodyAsClass(LoginRequest.class);
             var entityManager = factory.createEntityManager();
             DomainUser selectedUser = null;
             try {
-                 selectedUser = entityManager.createQuery("SELECT t FROM User t where t.login=:login", DomainUser.class)
+                selectedUser = entityManager.createQuery("SELECT t FROM User t where t.login=:login", DomainUser.class)
                         .setParameter("login", loginRequest.getLogin()).getSingleResult();
             } catch (Exception ex) {
                 ctx.result(ex.toString());
@@ -35,28 +36,26 @@ public class AuthEndpoint {
                 ctx.cookie("Session", handleLogin(selectedUser.getId()));
             } else {
                 ctx.result("Failed to login");
-                ctx.status(403);
+                ctx.status(401);
             }
         });
 
-        app.get("/profile" , ctx -> {
+        app.post("/logout", ctx -> {
+            enableAuthCORSFix(ctx);
             String session = ctx.cookie("Session");
-            Integer userId = tokenUserIdSessionKeeper.get(session);
-            var entityManager = factory.createEntityManager();
-            DomainUser domainUser = null;
-            try {
-                domainUser = entityManager.createQuery("SELECT t FROM User t where t.id=:id", DomainUser.class)
-                        .setParameter("id", userId).getSingleResult();
-            } catch (Exception ex) {
-                ctx.result(ex.toString());
-            } finally {
-                entityManager.close();
+            if (tokenUserIdSessionKeeper.remove(session) == null) {
+                ctx.status(401);
+            } else {
+                ctx.status(200);
             }
-            ctx.result(domainUser.getLogin());
+        });
+
+        app.get("/profile", ctx -> {
+            ctx.result(getUserInfo(ctx,factory).getLogin());
         });
     }
 
-    private static String handleLogin(Integer login){
+    private static String handleLogin(Integer login) {
         String token = null;
         try {
             token = generateToken();
@@ -72,5 +71,25 @@ public class AuthEndpoint {
         keyGen.init(128);
         SecretKey secretKey = keyGen.generateKey();
         return DatatypeConverter.printHexBinary(secretKey.getEncoded()).toLowerCase();
+    }
+
+    public static DomainUser getUserInfo(Context ctx, EntityManagerFactory factory){
+        String session = ctx.cookie("Session");
+        Integer userId = tokenUserIdSessionKeeper.get(session);
+        var entityManager = factory.createEntityManager();
+        DomainUser domainUser = null;
+        try {
+            domainUser = entityManager.createQuery("SELECT t FROM User t where t.id=:id", DomainUser.class)
+                    .setParameter("id", userId).getSingleResult();
+        } catch (Exception ex) {
+            ctx.status(401);
+        } finally {
+            entityManager.close();
+        }
+        return domainUser;
+    }
+
+    public static void enableAuthCORSFix(Context ctx) {
+        ctx.header("Access-Control-Allow-Credentials", "true");
     }
 }
