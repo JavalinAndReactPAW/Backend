@@ -28,7 +28,8 @@ public class AuthEndpoint {
                 selectedUser = entityManager.createQuery("SELECT t FROM User t where t.login=:login", DomainUser.class)
                         .setParameter("login", loginRequest.getLogin()).getSingleResult();
             } catch (Exception ex) {
-                ctx.result(ex.toString());
+                ctx.result("Failed to login");
+                ctx.status(401);
             } finally {
                 entityManager.close();
             }
@@ -51,7 +52,26 @@ public class AuthEndpoint {
         });
 
         app.get("/profile", ctx -> {
-            ctx.result(getUserInfo(ctx,factory).getLogin());
+            ctx.result(getUserInfo(ctx, factory).getLogin());
+        });
+
+        app.post("/register", ctx -> {
+            enableAuthCORSFix(ctx);
+            var loginRequest = ctx.bodyAsClass(LoginRequest.class);
+            var entityManager = factory.createEntityManager();
+            try {
+                var domainUser = DomainUser.builder().login(loginRequest.getLogin()).password(
+                        BCrypt.hashpw(loginRequest.getPassword(), BCrypt.gensalt())
+                ).build();
+                entityManager.getTransaction().begin();
+                entityManager.persist(domainUser);
+                entityManager.getTransaction().commit();
+            } catch (Exception ex) {
+                ctx.result(ex.toString());
+                ctx.status(401);
+            } finally {
+                entityManager.close();
+            }
         });
     }
 
@@ -73,7 +93,7 @@ public class AuthEndpoint {
         return DatatypeConverter.printHexBinary(secretKey.getEncoded()).toLowerCase();
     }
 
-    public static DomainUser getUserInfo(Context ctx, EntityManagerFactory factory){
+    public static DomainUser getUserInfo(Context ctx, EntityManagerFactory factory) {
         String session = ctx.cookie("Session");
         Integer userId = tokenUserIdSessionKeeper.get(session);
         var entityManager = factory.createEntityManager();
