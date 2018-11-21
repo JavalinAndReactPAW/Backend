@@ -2,6 +2,7 @@ package server;
 
 import domain.DomainBoard;
 import domain.DomainCard;
+import domain.DomainList;
 import io.javalin.Javalin;
 import lombok.val;
 
@@ -74,6 +75,74 @@ public class SampleEndpoints {
                 managerTransaction.commit();
             } catch (PersistenceException pe) {
                 ctx.result("Could not add new board: ID is probably not unique. Full exception--> " + pe.toString());
+            } catch (Exception ex) {
+                ctx.result(ex.toString());
+            } finally {
+                entityManager.close();
+            }
+        });
+
+        app.post("list/new", ctx -> {
+            val boardId = ctx.header("boardId");
+            DomainList domainList = ctx.bodyAsClass(DomainList.class);
+            int listId = domainList.getId();
+            String listName = domainList.getName();
+            val entityManager = factory.createEntityManager();
+            val managerTransaction = entityManager.getTransaction();
+            try {
+                managerTransaction.begin();
+                String query = "insert into LIST values(?, ?)";
+
+                entityManager.createNativeQuery(query)
+                        .setParameter(1, listId)
+                        .setParameter(2, listName)
+                        .executeUpdate();
+                ctx.result("Added new board successfully. ");
+                String query2 = "insert into BOARD_LIST values(?, ?)";
+
+                entityManager.createNativeQuery(query2)
+                        .setParameter(1, boardId)
+                        .setParameter(2, listId)
+                        .executeUpdate();
+
+                managerTransaction.commit();
+            } catch (PersistenceException pe) {
+                ctx.result("Could not add new list: ID is probably not unique. Full exception --> " + pe.toString());
+            } catch (Exception ex) {
+                ctx.result(ex.toString());
+            } finally {
+                entityManager.close();
+            }
+        });
+
+        app.post("card/new", ctx -> {
+            val listId = ctx.header("listId");
+            DomainCard domainCard = ctx.bodyAsClass(DomainCard.class);
+            val cardId = domainCard.getId();
+            val cardName = domainCard.getName();
+            val cardValue = domainCard.getValue();
+            val entityManager = factory.createEntityManager();
+            val managerTransaction = entityManager.getTransaction();
+            try {
+                managerTransaction.begin();
+                String query = "insert into CARD values(?, ?, ?)";
+
+                entityManager.createNativeQuery(query)
+                        .setParameter(1, cardId)
+                        .setParameter(2, cardName)
+                        .setParameter(3, cardValue)
+                        .executeUpdate();
+                ctx.result("Added new board successfully. ");
+                String query2 = "insert into LIST_CARD  values(?, ?)";
+
+                entityManager.createNativeQuery(query2)
+                        .setParameter(1, listId)
+                        .setParameter(2, cardId)
+                        .executeUpdate();
+
+                managerTransaction.commit();
+            } catch (PersistenceException pe) {
+                ctx.result("Could not add new card: ID is probably not unique. Full exception --> " + pe.toString());
             } catch (Exception ex) {
                 ctx.result(ex.toString());
             } finally {
