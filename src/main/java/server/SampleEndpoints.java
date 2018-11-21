@@ -6,6 +6,8 @@ import io.javalin.Javalin;
 import lombok.val;
 
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.PersistenceException;
 
 public class SampleEndpoints {
 
@@ -43,6 +45,39 @@ public class SampleEndpoints {
                 ctx.result(ex.toString());
             } finally {
                 tmp.close();
+            }
+        });
+
+        app.post("board/new", ctx -> {
+            val userId = ctx.header("user");
+            DomainBoard domainBoard = ctx.bodyAsClass(DomainBoard.class);
+            int boardId = domainBoard.getId();
+            String name = domainBoard.getName();
+            val entityManager = factory.createEntityManager();
+            val managerTransaction = entityManager.getTransaction();
+            try {
+                managerTransaction.begin();
+                String query = "insert into BOARD values(?, ?)";
+
+                entityManager.createNativeQuery(query)
+                        .setParameter(1, boardId)
+                        .setParameter(2, name)
+                        .executeUpdate();
+                ctx.result("Added new board successfully. ");
+                String query2 = "insert into USER_BOARDIDS values(?, ?)";
+
+                entityManager.createNativeQuery(query2)
+                        .setParameter(1, userId)
+                        .setParameter(2, boardId)
+                        .executeUpdate();
+
+                managerTransaction.commit();
+            } catch (PersistenceException pe) {
+                ctx.result("Could not add new board: ID is probably not unique. Full exception--> " + pe.toString());
+            } catch (Exception ex) {
+                ctx.result(ex.toString());
+            } finally {
+                entityManager.close();
             }
         });
 
