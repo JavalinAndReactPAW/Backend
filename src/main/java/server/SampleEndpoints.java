@@ -3,6 +3,7 @@ package server;
 import domain.DomainBoard;
 import domain.DomainCard;
 import domain.DomainList;
+import domain.DomainUser;
 import io.javalin.Javalin;
 import lombok.val;
 
@@ -50,7 +51,9 @@ public class SampleEndpoints {
         });
 
         app.post("board/new", ctx -> {
-            val userId = ctx.header("user");
+            AuthEndpoint.enableAuthCORSFix(ctx);
+            DomainUser domainUser = AuthEndpoint.getUserInfo(ctx, factory);
+            val userId = domainUser.getId();
             DomainBoard domainBoard = ctx.bodyAsClass(DomainBoard.class);
             int boardId = domainBoard.getId();
             String name = domainBoard.getName();
