@@ -53,28 +53,19 @@ public class SampleEndpoints {
         app.post("board/new", ctx -> {
             AuthEndpoint.enableAuthCORSFix(ctx);
             DomainUser domainUser = AuthEndpoint.getUserInfo(ctx, factory);
-            val userId = domainUser.getId();
-            DomainBoard domainBoard = ctx.bodyAsClass(DomainBoard.class);
-            int boardId = domainBoard.getId();
-            String name = domainBoard.getName();
+            DomainBoard inputBoard = ctx.bodyAsClass(DomainBoard.class);
             val entityManager = factory.createEntityManager();
             val managerTransaction = entityManager.getTransaction();
             try {
                 managerTransaction.begin();
-                String query = "insert into BOARD values(?, ?)";
-
-                entityManager.createNativeQuery(query)
-                        .setParameter(1, boardId)
-                        .setParameter(2, name)
-                        .executeUpdate();
-                ctx.result("Added new board successfully. ");
+                val createdBoard = DomainBoard.builder().name(inputBoard.getName()).build();
+                entityManager.persist(createdBoard);
+                entityManager.flush();
                 String query2 = "insert into USER_BOARDIDS values(?, ?)";
-
                 entityManager.createNativeQuery(query2)
-                        .setParameter(1, userId)
-                        .setParameter(2, boardId)
+                        .setParameter(1, domainUser.getId())
+                        .setParameter(2, createdBoard.getId())
                         .executeUpdate();
-
                 managerTransaction.commit();
             } catch (PersistenceException pe) {
                 ctx.result("Could not add new board: ID is probably not unique. Full exception--> " + pe.toString());
