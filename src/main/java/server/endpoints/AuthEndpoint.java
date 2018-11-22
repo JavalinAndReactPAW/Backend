@@ -1,4 +1,4 @@
-package server;
+package server.endpoints;
 
 import domain.DomainUser;
 import io.javalin.Context;
