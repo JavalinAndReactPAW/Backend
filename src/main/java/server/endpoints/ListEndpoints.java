@@ -1,5 +1,6 @@
 package server.endpoints;
 
+import domain.DomainBoard;
 import domain.DomainList;
 import domain.DomainUser;
 import io.javalin.Javalin;
@@ -51,29 +52,21 @@ public class ListEndpoints {
         app.post("/boards/:id/lists", ctx -> {
             AuthEndpoint.enableAuthCORSFix(ctx);
             DomainUser domainUser = AuthEndpoint.getUserInfo(ctx, entityManagerFactory);
+            val userBoards = domainUser.getBoardIds();
             DomainList inputList = ctx.bodyAsClass(DomainList.class);
             val boardId = Integer.valueOf(ctx.pathParam("id"));
             val entityManager = entityManagerFactory.createEntityManager();
             val managerTransaction = entityManager.getTransaction();
             try {
                 managerTransaction.begin();
-                val createdList = DomainList.builder().name(inputList.getName()).build();
-                entityManager.persist(createdList);
-                entityManager.flush();
-                val listId = createdList.getId();
-                String query = "insert into LIST values(?, ?)";
-                entityManager.createNativeQuery(query)
-                        .setParameter(1, listId)
-                        .setParameter(2, inputList.getName())
-                        .executeUpdate();
-                managerTransaction.commit();
-
-                String query2 = "insert into BOARD_LIST values(?, ?)";
-                entityManager.createNativeQuery(query2)
-                        .setParameter(1, boardId)
-                        .setParameter(2, listId)
-                        .executeUpdate();
-                managerTransaction.commit();
+                val modifiedBoard = entityManager.createQuery("SELECT t FROM Board t where t.id=:id", DomainBoard.class).setParameter("id", boardId).getSingleResult();
+                if (!userBoards.contains(modifiedBoard.getId()))
+                    ctx.status(403);
+                else {
+                    modifiedBoard.getLists().add(inputList);
+                    entityManager.persist(modifiedBoard);
+                    managerTransaction.commit();
+                }
             } catch (PersistenceException pe) {
                 ctx.result("Could not add new board: ID is probably not unique. Full exception--> " + pe.toString());
             } catch (Exception ex) {

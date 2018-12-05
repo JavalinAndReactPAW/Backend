@@ -28,11 +28,17 @@ public class BoardEndpoints {
         });
 
         app.get("/boards/:id", ctx -> {
+            AuthEndpoint.enableAuthCORSFix(ctx);
             int id = Integer.valueOf(ctx.pathParam("id"));
             val tmp = factory.createEntityManager();
+            DomainUser domainUser = AuthEndpoint.getUserInfo(ctx, factory);
             try {
-                val result = tmp.createQuery("SELECT t FROM Board t where t.id=:id", DomainBoard.class).setParameter("id", id).getSingleResult();
-                ctx.json(result);
+                if (!domainUser.getBoardIds().contains(id))
+                    ctx.status(403);
+                else {
+                    val result = tmp.createQuery("SELECT t FROM Board t where t.id=:id", DomainBoard.class).setParameter("id", id).getSingleResult();
+                    ctx.json(result);
+                }
             } catch (Exception ex) {
                 ctx.result(ex.toString());
             } finally {
