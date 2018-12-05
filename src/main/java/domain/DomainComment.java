@@ -10,8 +10,8 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name = "Card")
-public class DomainCard {
+@Entity(name = "Comment")
+public class DomainComment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,7 +19,4 @@ public class DomainCard {
 
     private String name;
     private String value;
-
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<DomainComment> comments;
 }
