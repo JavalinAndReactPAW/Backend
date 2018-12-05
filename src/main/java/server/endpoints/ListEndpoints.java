@@ -48,7 +48,6 @@ public class ListEndpoints {
         });*/
 
 
-        //TODO: Fix binding of added list with table
         app.post("/boards/:id/lists", ctx -> {
             AuthEndpoint.enableAuthCORSFix(ctx);
             DomainUser domainUser = AuthEndpoint.getUserInfo(ctx, entityManagerFactory);
