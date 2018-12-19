@@ -25,4 +25,5 @@ public class DomainBoard {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<DomainList> lists;
 
+    private BoardState boardState;
 }

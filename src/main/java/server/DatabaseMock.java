@@ -1,9 +1,6 @@
 package server;
 
-import domain.DomainBoard;
-import domain.DomainCard;
-import domain.DomainList;
-import domain.DomainUser;
+import domain.*;
 import org.mindrot.jbcrypt.BCrypt;
 
 import javax.persistence.EntityManager;
@@ -36,7 +33,7 @@ public class DatabaseMock {
         cardCollection.add(DomainCard.builder().name("TEST1").value("kartaJedna").build());
         cardCollection.add(DomainCard.builder().name("TEST2").value("kartaDruga").build());
         listCollection.add(DomainList.builder().name("Lista4").cards(cardCollection).build());
-        DomainBoard table = DomainBoard.builder().name("TESTOWA TABLICA").lists(listCollection).build();
+        DomainBoard table = DomainBoard.builder().name("TESTOWA TABLICA").boardState(BoardState.ACTIVE).lists(listCollection).build();
 
         manager.persist(table);
 
@@ -57,7 +54,7 @@ public class DatabaseMock {
         cardCollection.add(DomainCard.builder().name("TEST1").value("kartaJedna").build());
         cardCollection.add(DomainCard.builder().name("TEST2").value("kartaDruga").build());
         listCollection.add(DomainList.builder().name("Lista8").cards(cardCollection).build());
-        DomainBoard table2 = DomainBoard.builder().name("TESTOWA TABLICA 2").lists(listCollection).build();
+        DomainBoard table2 = DomainBoard.builder().name("TESTOWA TABLICA 2").boardState(BoardState.ACTIVE).lists(listCollection).build();
 
         manager.persist(table2);
 

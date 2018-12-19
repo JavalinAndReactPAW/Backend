@@ -1,12 +1,15 @@
 package server.endpoints;
 
+import domain.BoardState;
 import domain.DomainBoard;
 import domain.DomainUser;
 import io.javalin.Javalin;
 import lombok.val;
+import lombok.var;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
+import java.util.stream.Collectors;
 
 public class BoardEndpoints {
     public static void create(Javalin app, EntityManagerFactory factory) {
@@ -16,9 +19,11 @@ public class BoardEndpoints {
             val tmp = factory.createEntityManager();
             DomainUser domainUser = AuthEndpoint.getUserInfo(ctx, factory);
             try {
-                val result = tmp.createQuery("SELECT t FROM Board t WHERE id IN :ids", DomainBoard.class)
+                var result = tmp.createQuery("SELECT t FROM Board t WHERE id IN :ids", DomainBoard.class)
                         .setParameter("ids", domainUser.getBoardIds()).getResultList();
                 result.forEach(domainBoard -> domainBoard.setLists(null));
+                result = result.stream().filter(domainBoard -> !domainBoard.getBoardState().equals(BoardState.DELETED))
+                        .collect(Collectors.toList());
                 ctx.json(result);
             } catch (Exception ex) {
                 ctx.status(401);
@@ -46,6 +51,36 @@ public class BoardEndpoints {
             }
         });
 
+        app.patch("/boards/:id/:action", ctx -> {
+            AuthEndpoint.enableAuthCORSFix(ctx);
+            int id = Integer.valueOf(ctx.pathParam("id"));
+            String action = String.valueOf(ctx.pathParam("action"));
+            val tmp = factory.createEntityManager();
+            val transaction = tmp.getTransaction();
+            DomainUser domainUser = AuthEndpoint.getUserInfo(ctx, factory);
+            transaction.begin();
+            try {
+                if (!domainUser.getBoardIds().contains(id))
+                    ctx.status(403);
+                else {
+                    val result = tmp.createQuery("SELECT t FROM Board t where t.id=:id", DomainBoard.class).setParameter("id", id).getSingleResult();
+                    if (action.equals("disable")) {
+                        result.setBoardState(BoardState.DISABLED);
+                    } else if (action.equals("delete")) {
+                        result.setBoardState(BoardState.DELETED);
+                    } else if (action.equals("enable") && result.getBoardState().equals(BoardState.DISABLED)) {
+                        result.setBoardState(BoardState.ACTIVE);
+                    }
+                    tmp.persist(result);
+                    transaction.commit();
+                }
+            } catch (Exception ex) {
+                ctx.result(ex.toString());
+            } finally {
+                tmp.close();
+            }
+        });
+
         app.post("boards/new", ctx -> {
             AuthEndpoint.enableAuthCORSFix(ctx);
             DomainUser domainUser = AuthEndpoint.getUserInfo(ctx, factory);
@@ -54,7 +89,7 @@ public class BoardEndpoints {
             val managerTransaction = entityManager.getTransaction();
             try {
                 managerTransaction.begin();
-                val createdBoard = DomainBoard.builder().name(inputBoard.getName()).build();
+                val createdBoard = DomainBoard.builder().name(inputBoard.getName()).boardState(BoardState.ACTIVE).build();
                 entityManager.persist(createdBoard);
                 entityManager.flush();
                 String query2 = "insert into USER_BOARDIDS values(?, ?)";
