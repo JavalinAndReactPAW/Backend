@@ -1,9 +1,6 @@
 package server.endpoints;
 
-import domain.DomainBoard;
-import domain.DomainCard;
-import domain.DomainList;
-import domain.DomainUser;
+import domain.*;
 import io.javalin.Javalin;
 import lombok.val;
 
@@ -77,6 +74,32 @@ public class CardEndpoints {
                 ctx.result(result.toString());
 
             } catch (IndexOutOfBoundsException ex) {
+                ctx.result(ex.toString());
+            } finally {
+                tmp.close();
+            }
+        });
+
+        app.delete("boards/:idboard/lists/:idlist/cards/:idcard", ctx -> {
+            AuthEndpoint.enableAuthCORSFix(ctx);
+            int boardId = Integer.valueOf(ctx.pathParam("idboard"));
+            int listId = Integer.valueOf(ctx.pathParam("idlist"));
+            int cardId = Integer.valueOf(ctx.pathParam("idcard"));
+
+            val tmp = entityManagerFactory.createEntityManager();
+            val managerTransaction = tmp.getTransaction();
+            managerTransaction.begin();
+
+            try {
+                val result = tmp.createQuery("SELECT t FROM Board t where t.id=:id", DomainBoard.class).setParameter("id", boardId).getSingleResult();
+                DomainList list = result.getLists().stream().filter(item -> item.getId().equals(listId)).collect(Collectors.toList()).get(0);
+                DomainCard card = list.getCards().stream().filter(item -> item.getId().equals(cardId)).collect(Collectors.toList()).get(0);
+                list.getCards().remove(card);
+                tmp.persist(result);
+                managerTransaction.commit();
+            } catch (PersistenceException pe) {
+                ctx.result(pe.toString());
+            } catch (Exception ex) {
                 ctx.result(ex.toString());
             } finally {
                 tmp.close();

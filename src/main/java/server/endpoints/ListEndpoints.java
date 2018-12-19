@@ -1,6 +1,7 @@
 package server.endpoints;
 
 import domain.DomainBoard;
+import domain.DomainCard;
 import domain.DomainList;
 import domain.DomainUser;
 import io.javalin.Javalin;
@@ -8,6 +9,7 @@ import lombok.val;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
+import java.util.stream.Collectors;
 
 public class ListEndpoints {
 
@@ -72,6 +74,30 @@ public class ListEndpoints {
                 ctx.result(ex.toString());
             } finally {
                 entityManager.close();
+            }
+        });
+
+        app.delete("boards/:idboard/lists/:idlist", ctx -> {
+            AuthEndpoint.enableAuthCORSFix(ctx);
+            int boardId = Integer.valueOf(ctx.pathParam("idboard"));
+            int listId = Integer.valueOf(ctx.pathParam("idlist"));
+
+            val tmp = entityManagerFactory.createEntityManager();
+            val managerTransaction = tmp.getTransaction();
+            managerTransaction.begin();
+
+            try {
+                val result = tmp.createQuery("SELECT t FROM Board t where t.id=:id", DomainBoard.class).setParameter("id", boardId).getSingleResult();
+                DomainList list = result.getLists().stream().filter(item -> item.getId().equals(listId)).collect(Collectors.toList()).get(0);
+                result.getLists().remove(list);
+                tmp.persist(result);
+                managerTransaction.commit();
+            } catch (PersistenceException pe) {
+                ctx.result(pe.toString());
+            } catch (Exception ex) {
+                ctx.result(ex.toString());
+            } finally {
+                tmp.close();
             }
         });
     }
