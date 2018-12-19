@@ -21,6 +21,7 @@ public class StartApp {
         CardEndpoints.create(app, entityManagerFactory);
         RemainingEndpoints.create(app, entityManagerFactory);
         AuthEndpoint.addAuthEndpoint(app, entityManagerFactory);
+        CommentEndpoints.create(app, entityManagerFactory);
 
         app.start(7000);
     }
