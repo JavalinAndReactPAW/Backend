@@ -51,7 +51,7 @@ public class BoardEndpoints {
             }
         });
 
-        app.patch("/boards/:id/:action", ctx -> {
+        app.post("/boards/:id/:action", ctx -> {
             AuthEndpoint.enableAuthCORSFix(ctx);
             int id = Integer.valueOf(ctx.pathParam("id"));
             String action = String.valueOf(ctx.pathParam("action"));
