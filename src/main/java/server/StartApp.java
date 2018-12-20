@@ -15,9 +15,9 @@ public class StartApp {
 
         Javalin app = Javalin.create();
         app.enableCorsForAllOrigins();
-
-        BoardEndpoints.create(app, entityManagerFactory);
         ListEndpoints.create(app, entityManagerFactory);
+        BoardEndpoints.create(app, entityManagerFactory);
+
         CardEndpoints.create(app, entityManagerFactory);
         RemainingEndpoints.create(app, entityManagerFactory);
         AuthEndpoint.addAuthEndpoint(app, entityManagerFactory);
