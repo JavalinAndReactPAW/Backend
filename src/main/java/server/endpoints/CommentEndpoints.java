@@ -39,7 +39,7 @@ public class CommentEndpoints {
             }
         });
 
-        app.delete("boards/:idboard/lists/:idlist/cards/:idcard/comments/:idcomment", ctx -> {
+        app.post("boards/:idboard/lists/:idlist/cards/:idcard/comments/:idcomment/delete", ctx -> {
             AuthEndpoint.enableAuthCORSFix(ctx);
             int boardId = Integer.valueOf(ctx.pathParam("idboard"));
             int listId = Integer.valueOf(ctx.pathParam("idlist"));

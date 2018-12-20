@@ -80,7 +80,7 @@ public class CardEndpoints {
             }
         });
 
-        app.delete("boards/:idboard/lists/:idlist/cards/:idcard", ctx -> {
+        app.post("boards/:idboard/lists/:idlist/cards/:idcard/delete", ctx -> {
             AuthEndpoint.enableAuthCORSFix(ctx);
             int boardId = Integer.valueOf(ctx.pathParam("idboard"));
             int listId = Integer.valueOf(ctx.pathParam("idlist"));

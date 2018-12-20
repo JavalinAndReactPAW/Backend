@@ -77,7 +77,7 @@ public class ListEndpoints {
             }
         });
 
-        app.delete("boards/:idboard/lists/:idlist", ctx -> {
+        app.post("boards/:idboard/lists/:idlist/delete", ctx -> {
             AuthEndpoint.enableAuthCORSFix(ctx);
             int boardId = Integer.valueOf(ctx.pathParam("idboard"));
             int listId = Integer.valueOf(ctx.pathParam("idlist"));
